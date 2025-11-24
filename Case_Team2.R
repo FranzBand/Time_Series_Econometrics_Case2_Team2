@@ -39,7 +39,7 @@ plot(trans_cpiaucsl, main = "transformed cpi")
 #put all data together
 var_data <- cbind(trans_indpro, trans_fedfunds, trans_cpiaucsl)
 View(var_data)
-lag_selection <- VARselect(var_data, lag.max= 15, type ="const")
+lag_selection <- VARselect(var_data, lag.max= 20, type ="const")
 print(lag_selection$selection)
 
 ##
@@ -56,3 +56,6 @@ print(lag_selection_indpro_10$selection)
 
 lag_selection_indpro_19 <- VARselect(trans_indpro, lag.max = 19, type ="const")
 print(lag_selection_indpro_19$selection)
+
+#use irf to compare models!!!
+#VAR function
