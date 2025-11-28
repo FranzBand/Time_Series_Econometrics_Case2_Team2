@@ -72,4 +72,7 @@ plot(var_model)
 #Do you see me!!!
 plot(x = 1)
 
+#new test
+plot(data$INDPRO)
+
 
