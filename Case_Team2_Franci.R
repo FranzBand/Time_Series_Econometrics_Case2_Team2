@@ -39,7 +39,7 @@ plot(trans_cpiaucsl, main = "transformed cpi")
 #put all data together
 var_data <- cbind(trans_indpro, trans_fedfunds, trans_cpiaucsl)
 View(var_data)
-lag_selection <- VARselect(var_data, lag.max= 15, type ="const")  #check for info criteria
+lag_selection <- VARselect(var_data, lag.max= 60, type ="const")  #check for info criteria
 print(lag_selection$selection)  #VAR(3) or VAR(4) selected
 
 
