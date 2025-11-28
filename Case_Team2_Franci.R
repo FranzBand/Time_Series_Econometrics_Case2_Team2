@@ -68,3 +68,5 @@ var_model
 summary(var_model)
 
 plot(var_model)
+
+#TEXT
