@@ -1,9 +1,10 @@
 #set wd for franci
 setwd("~/Desktop/Time Series Econometrics/Case_Team2/Historical-vintages-of-FRED-MD-2015-01-to-2024-12")
-
+#----Load data and packages
 library(dplyr)
 library(ggplot2)
 library(vars)
+library(bootUR)
 
 data_full <- read.csv("2020-01.csv")
 head(data_full)
@@ -11,7 +12,7 @@ View(data_full)
 
 data <- data_full[-1, ] #first row is skipped, so it's easier to work with the data
 View(data)
-
+#----get the data/ variables we want
 indpro <- data$INDPRO   #industrial production, id6 
 trans_indpro <- diff(log(indpro)) #transformed indpro
 plot(indpro, main = "Ind prod Index")
@@ -54,7 +55,24 @@ summary(var_model)
 
 plot(var_model)
 
-##SVAR models by Franci
+#----Unit root test
+set.seed(42)
+indpro_log <- log(indpro)
+
+adf_indpro_2 <- adf(diff(indpro_log, differences=2), deterministics= "intercept")
+print(adf_indpro_2)
+
+adf_indpro_1 <- adf(diff(indpro_log, differences=1), deterministics= "intercept")
+print(adf_indpro_1)
+
+adf_indpro_0 <- adf(indpro_log, deterministics= "intercept")
+print(adf_indpro_0)
+
+adf_all <- boot_ur(var_data, deterministics= "const")
+print(adf_all)
+
+
+#-----SVAR models by Franci
 
 ?SVAR()
 
