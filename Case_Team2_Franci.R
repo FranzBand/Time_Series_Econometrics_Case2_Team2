@@ -1,5 +1,6 @@
 #set wd for franci
 setwd("~/Desktop/Time Series Econometrics/Case_Team2/Historical-vintages-of-FRED-MD-2015-01-to-2024-12")
+
 #----Load data and packages
 library(dplyr)
 library(ggplot2)
@@ -12,17 +13,23 @@ View(data_full)
 
 data <- data_full[-1, ] #first row is skipped, so it's easier to work with the data
 View(data)
+
+
+
 #----get the data/ variables we want
 indpro <- data$INDPRO   #industrial production, id6 
 trans_indpro <- diff(log(indpro)) #transformed indpro
-plot(indpro, main = "Ind prod Index")
-plot(trans_indpro, main = "trans Ind prod Index")
-
+plot(indpro, main = "Ind prod Index", type = "l", xlab= "Months since Jan 1959", ylab= "index")
+plot(trans_indpro, main = "trans Ind prod Index", type= "l", xlab= "Months since Jan 1959", ylab= "index")
+#plot transformed according to the transformation code of the appendix
 
 fedfunds <- data$FEDFUNDS  #effective federal funds rate, id84
 trans_fedfunds <- diff(fedfunds)  #transformed fed rate
-plot(fedfunds, main = "fed fund rates")
-plot(trans_fedfunds, main = " trans fed fund rates")
+plot(fedfunds, main = "fed fund rates", type= "l", xlab= "Months since Jan 1959", ylab= "index")
+plot(trans_fedfunds, main = " trans fed fund rates", type ="l", xlab= "Months since Jan 1959", ylab= "index")
+
+
+
 
 list(fedfunds)
 boxplot(fedfunds, main ="Boxplot fed funds rate")
@@ -30,11 +37,13 @@ boxplot(trans_fedfunds, main ="trans Boxplot fed funds rate")
 
 cpiaucsl <- data$CPIAUCSL  #113
 View(cpiaucsl)
-plot(cpiaucsl, main = "consumer price index")
+plot(cpiaucsl, main = "consumer price index", type= "l", xlab= "Months since Jan 1959", ylab= "index")
 trans_cpiaucsl <- diff(diff(log(cpiaucsl))) #transformed according to appendix
 trans_cpiaucsl_1 <- diff(log(cpiaucsl)) #transformed with only one diff
-plot(trans_cpiaucsl_1, main = "transformed with only one diff, cpi")
-plot(trans_cpiaucsl, main = "transformed cpi")
+plot(trans_cpiaucsl_1, main = "transformed with only one diff, cpi",
+     xlab= "Months since Jan 1959", ylab= "index", type= "l")
+plot(trans_cpiaucsl, main = "transformed cpi",
+     xlab= "Months since Jan 1959", ylab= "index", type= "l")
 
 
 #put all data together
@@ -57,20 +66,34 @@ plot(var_model)
 
 #----Unit root test
 set.seed(42)
-indpro_log <- log(indpro)
 
-adf_indpro_2 <- adf(diff(indpro_log, differences=2), deterministics= "intercept")
+##ur test for indpro
+indpro_log <- log(indpro)
+plot(indpro_log, type="l", main= "ind prod log")
+
+adf_indpro_2 <- adf(diff(indpro_log, differences=2), deterministics= "trend")
 print(adf_indpro_2)
 
-adf_indpro_1 <- adf(diff(indpro_log, differences=1), deterministics= "intercept")
+adf_indpro_1 <- adf(diff(indpro_log, differences=1), deterministics= "trend")
 print(adf_indpro_1)
 
-adf_indpro_0 <- adf(indpro_log, deterministics= "intercept")
+adf_indpro_0 <- adf(indpro_log, deterministics= "trend")
 print(adf_indpro_0)
 
 adf_all <- boot_ur(var_data, deterministics= "const")
 print(adf_all)
 
+
+
+#fedfunds unit root test
+adf_fedfunds_2 <- adf(diff(fedfunds, differences=2), deterministics= "intercept")
+print(adf_fedfunds_2)
+
+adf_fedfunds_1 <- adf(diff(fedfunds, differences=1), deterministics= "intercept")
+print(adf_fedfunds_1)
+
+adf_fedfunds_0 <- adf(fedfunds, deterministics= "intercept")
+print(adf_fedfunds_0)
 
 #-----SVAR models by Franci
 
