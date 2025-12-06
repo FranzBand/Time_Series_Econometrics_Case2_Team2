@@ -29,8 +29,6 @@ plot(fedfunds, main = "fed fund rates", type= "l", xlab= "Months since Jan 1959"
 plot(trans_fedfunds, main = " trans fed fund rates", type ="l", xlab= "Months since Jan 1959", ylab= "index")
 
 
-
-
 list(fedfunds)
 boxplot(fedfunds, main ="Boxplot fed funds rate")
 boxplot(trans_fedfunds, main ="trans Boxplot fed funds rate")
@@ -64,6 +62,13 @@ summary(var_model)
 
 plot(var_model)
 
+var_data_new <- var_data[, c(2,1,3)]
+var_data_new_model <- VAR(var_data_new, p=3, type="const")
+summary(var_data_new_model)
+
+irf_var_new <- irf(var_data_new_model, n.ahead = 10, boot= TRUE)
+plot(irf_var_new)
+
 #----Unit root test
 set.seed(42)
 
@@ -84,7 +89,6 @@ adf_all <- boot_ur(var_data, deterministics= "const")
 print(adf_all)
 
 
-
 #fedfunds unit root test
 adf_fedfunds_2 <- adf(diff(fedfunds, differences=2), deterministics= "intercept")
 print(adf_fedfunds_2)
@@ -94,6 +98,19 @@ print(adf_fedfunds_1)
 
 adf_fedfunds_0 <- adf(fedfunds, deterministics= "intercept")
 print(adf_fedfunds_0)
+
+
+#cpiaucsl unit root test
+adf_cpiaucsl_2 <- adf(diff(cpiaucsl, differences=2), deterministics= "intercept")
+print(adf_cpiaucsl_2)
+
+adf_cpiaucsl_1 <- adf(diff(cpiaucsl, differences=1), deterministics= "intercept")
+print(adf_cpiaucsl_1)
+#reject the h0 hypothesis, series is stationary
+
+adf_cpiaucsl_0 <- adf(cpiaucsl, deterministics= "intercept")
+print(adf_cpiaucsl_0)
+#not possible to reject the H0 hypothesis, unit root
 
 #-----SVAR models by Franci
 
@@ -116,7 +133,7 @@ irf_responsive1
 plot(irf_responsive1)#plotting the ir function for svar1  
 
 
-var_data_new <- var_data[, c(2,3,1)]  #order data in new way for SVAR
+var_data_new <- var_data[, c(2,1,3)]  #order data in new way for SVAR
 View(var_data_new)
 
 var_model_new <- VAR(var_data_new, p=3, type = "const")#var model for new order
@@ -128,6 +145,7 @@ amat2 [3,1:2] <-0
 amat2
 
 svar2 <- SVAR(var_model_new, estmethod = "direct", Amat=amat2)#getting the svar for the new model
+svar2
 summary(svar2)
 
 irf_responsive2 <- irf(svar2, n.ahead=24)#irf responsive for new order
