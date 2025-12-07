@@ -195,3 +195,4 @@ plot(irf_responsive2)
 #to do:
 #understand how svar works
 
+plot(trans_indpro)
