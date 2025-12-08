@@ -540,8 +540,6 @@ ggplot(plot_data, aes(x = horizon, y = irf)) +
     strip.background = element_rect(fill = "#f0f0f0", color = "black")
   )
 
-
-
 #-----SVAR models by Franci----
 
 #create A-matrix
@@ -564,14 +562,14 @@ plot(irf_responsive1)#plotting the ir function for svar1
 #var_data_new has the order: indpro -> cpi -> fed funds
 var_data_new <- var_data[, c(1,3,2)]
 lag_selection_new <- VARselect(var_data_new, lag.max= 60, type ="const")  #check for info criteria
-print(lag_selection$selection)  #VAR(3) is selected
+print(lag_selection_new$selection)  #VAR(3) is selected
 var_data_new_model <- VAR(var_data_new, p=3, type="const")
 
 summary(var_data_new_model)
 plot(var_data_new_model)
 
 #impulsive response functions for new order
-irf_var_new <- irf(var_data_new_model, n.ahead = 12, boot= TRUE, ortho = "False")
+irf_var_new <- irf(var_data_new_model, n.ahead = 12, boot= TRUE, ortho = TRUE)
 plot(irf_var_new)
 
 ##svar2
