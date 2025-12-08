@@ -112,25 +112,11 @@ summary(var_model)
 
 plot(var_model)
 
-#new ordering of data
-#var_data_new has the order: indpro, cpi, fed funds
-var_data_new <- var_data[, c(1,3,2)]
-lag_selection_new <- VARselect(var_data_new, lag.max= 60, type ="const")  #check for info criteria
-print(lag_selection$selection)  #VAR(3) or VAR(4) selected
-var_data_new_model <- VAR(var_data_new, p=3, type="const")
-
-summary(var_data_new_model)
-plot(var_data_new_model)
-
-#impulsive response functions for new order
-irf_var_new <- irf(var_data_new_model, n.ahead = 12, boot= TRUE, ortho = "False")
-plot(irf_var_new)
-
-#----Unit root test
-
-##ur test for indpro
+#----Unit root test----
+#----ur test for indpro-----
 indpro_log <- log(indpro)
-plot(indpro_log, type="l", main= "ind prod log")
+plot(indpro_log, type="l", main= "ind prod log")#plot without proper laberling of axis,
+#because it's just to see if it needs "trend" or "intercept" for the adf
 
 indpro_d2 <- diff(diff(indpro_log))
 plot(indpro_d2, type="l", main="ind prod diff^2")
@@ -139,7 +125,7 @@ abline(h=0, col= "blue")
 indpro_d1 <- diff(indpro_log)
 plot(indpro_d1, type="l", main="ind prod diff^1")
 abline(h=0, col= "blue")
-abline(h=0.01, col="red")
+abline(h=0.005, col="red")
 
 adf_indpro_2 <- adf(diff(indpro_log, differences=2), deterministics= "intercept")
 print(adf_indpro_2)
@@ -156,23 +142,47 @@ print(adf_indpro_0)
 #trend, because a clear trend is visible in the plot.
 #Fail to reject H0 hypothesis, time series has an unit root
 
-#needed? otherwise delete
-adf_all <- boot_ur(var_data, deterministics= "const")
-print(adf_all)
+#-----fedfunds unit root test-----
+plot(fedfunds, type="l", main= "fed funds rate")#plot without proper laberling of axis,
+#because it's just to see if it needs "trend" or "intercept" for the adf
 
+fedfunds_d2 <- diff(diff(fedfunds))
+plot(fedfunds_d2, type="l", main="fed funds diff^2")
+abline(h=0, col= "blue")
 
-#fedfunds unit root test
+fedfunds_d1 <- diff(fedfunds)
+plot(fedfunds_d1, type="l", main="fed funds diff^1")
+abline(h=0, col= "blue")
+
 adf_fedfunds_2 <- adf(diff(fedfunds, differences=2), deterministics= "intercept")
 print(adf_fedfunds_2)
+#intercept, because no clear trend is visible in the plot.
+#Reject H0 hypothesis, time series is stationary
 
 adf_fedfunds_1 <- adf(diff(fedfunds, differences=1), deterministics= "intercept")
 print(adf_fedfunds_1)
+#intercept, because no clear trend is visible in the plot.
+#Reject H0 hypothesis, time series is stationary
 
 adf_fedfunds_0 <- adf(fedfunds, deterministics= "intercept")
 print(adf_fedfunds_0)
+#trend, because a clear trend is visible in the plot.
+#Fail to reject H0 hypothesis, time series has an unit root
 
+#----cpi unit root test-----
+plot(cpi, type="l", main= "consumer price index")#plot without proper laberling of axis,
+#because it's just to see if it needs "trend" or "intercept" for the adf
 
-#cpi unit root test
+cpi_d2 <- diff(diff(cpi))
+plot(cpi_d2, type="l", main="consumer price index diff^2")
+abline(h=0, col= "blue")
+
+cpi_d1 <- diff(cpi)
+plot(cpi_d1, type="l", main="consumer price index diff^1")
+abline(h=0, col= "blue")
+abline(h=0.25, col= "red")
+abline(h=0.5, col= "green")
+
 adf_cpi_2 <- adf(diff(cpi, differences=2), deterministics= "intercept")
 print(adf_cpi_2)
 #reject h0 hypothesis, series is stationary of order I(2)
@@ -183,10 +193,8 @@ print(adf_cpi_1)
 
 adf_cpi_0 <- adf(cpi, deterministics= "trend")
 print(adf_cpi_0)
-#not possible to reject the H0 hypothesis, unit root
+#not possible to reject the H0 hypothesis, time series has a unit root
 
-
-##granger causality
 
 #-------- PART: LORIS ---------
 
@@ -544,7 +552,7 @@ ggplot(plot_data, aes(x = horizon, y = irf)) +
 
 
 
-#-----SVAR models by Franci
+#-----SVAR models by Franci----
 
 ?SVAR()
 
@@ -562,6 +570,20 @@ summary(svar1)#look at svar1 responses
 
 irf_responsive1 <- irf(svar1, n.ahead = 24)
 plot(irf_responsive1)#plotting the ir function for svar1  
+
+#-----new ordering of data-----
+#var_data_new has the order: indpro, cpi, fed funds
+var_data_new <- var_data[, c(1,3,2)]
+lag_selection_new <- VARselect(var_data_new, lag.max= 60, type ="const")  #check for info criteria
+print(lag_selection$selection)  #VAR(3) or VAR(4) selected
+var_data_new_model <- VAR(var_data_new, p=3, type="const")
+
+summary(var_data_new_model)
+plot(var_data_new_model)
+
+#impulsive response functions for new order
+irf_var_new <- irf(var_data_new_model, n.ahead = 12, boot= TRUE, ortho = "False")
+plot(irf_var_new)
 
 ##svar2
 amat2 <- matrix(NA, 3,3)#a matrix
