@@ -555,7 +555,7 @@ svar1 <- SVAR(var_model, estmethod = "direct", Amat = amat)#get svar by a matrix
 svar1
 summary(svar1)#look at svar1 responses
 
-irf_responsive1 <- irf(svar1, n.ahead = 24)
+irf_responsive1 <- irf(svar1, n.ahead = 12)
 plot(irf_responsive1)#plotting the ir function for svar1  
 
 #-----new ordering of data-----
@@ -589,5 +589,5 @@ svar2 <- SVAR(var_data_new_model, estmethod = "direct", Amat=amat2, Bmat=bmat)#g
 svar2
 summary(svar2)
 
-irf_responsive2 <- irf(svar2, n.ahead=12)#irf responsive for new order, 12 monts ahead
+irf_responsive2 <- irf(svar2, n.ahead=12)#irf responsive for new order, 12 months ahead
 plot(irf_responsive2)
