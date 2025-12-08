@@ -333,9 +333,7 @@ irf_levels$Upper <- lapply(irf_rf_boot$Upper, function(m) {
 # Plot IRFs interpreted as responses of the original series in (log-)levels
 plot(irf_levels)
 
-# ==============================================================================
-# PLOT FOR REDUCED-FORM POINT ESTIMATES (NO CI)
-# ==============================================================================
+# -----PLOT FOR REDUCED-FORM POINT ESTIMATES (NO CI)-----
 
 # 1. Helper Function: Convert Point Estimate Object to Data Frame
 extract_point_irf <- function(irf_object) {
@@ -397,9 +395,7 @@ ggplot(plot_data_point, aes(x = horizon, y = irf)) +
   )
 
 
-# ==============================================================================
-# PLOT FOR BOOTSTRAPPED IRFs (WITH 95% CI)
-# ==============================================================================
+#------ PLOT FOR BOOTSTRAPPED IRFs (WITH 95% CI)-----
 
 # 1. Helper Function: Convert Bootstrapped IRF Object to Data Frame
 extract_boot_irf <- function(irf_object) {
@@ -474,9 +470,8 @@ ggplot(plot_data_boot, aes(x = horizon, y = irf)) +
   )
 
 
-# ==============================================================================
-# 7. Impulse Response Functions (Cumulative Levels)
-# ==============================================================================
+
+# -----7. Impulse Response Functions (Cumulative Levels)-----
 
 # --- Helper Function: Convert IRF Object to Tidy Data Frame ---
 extract_irf_df <- function(irf_object) {
@@ -549,8 +544,7 @@ ggplot(plot_data, aes(x = horizon, y = irf)) +
 
 #-----SVAR models by Franci----
 
-?SVAR()
-
+#create A-matrix
 # NA = free parameter, 0 = restricted to zero, 1 = fixed (usually diagonal)
 amat <- matrix(NA, 3, 3)
 diag(amat) <- 1        # each variable shocks itself
@@ -558,7 +552,7 @@ amat[2,1] <- 0         # y1 does NOT contemporaneously affect y2
 amat[3,1:2] <- 0       # y1, y2 do NOT contemporaneously affect y3
 amat
 
-#svar 1 has the order: indpro, fed funds, cpiauscl
+#svar 1 has the order: indpro -> fed funds -> cpi
 svar1 <- SVAR(var_model, estmethod = "direct", Amat = amat)#get svar by a matrix method
 svar1
 summary(svar1)#look at svar1 responses
@@ -567,10 +561,10 @@ irf_responsive1 <- irf(svar1, n.ahead = 24)
 plot(irf_responsive1)#plotting the ir function for svar1  
 
 #-----new ordering of data-----
-#var_data_new has the order: indpro, cpi, fed funds
+#var_data_new has the order: indpro -> cpi -> fed funds
 var_data_new <- var_data[, c(1,3,2)]
 lag_selection_new <- VARselect(var_data_new, lag.max= 60, type ="const")  #check for info criteria
-print(lag_selection$selection)  #VAR(3) or VAR(4) selected
+print(lag_selection$selection)  #VAR(3) is selected
 var_data_new_model <- VAR(var_data_new, p=3, type="const")
 
 summary(var_data_new_model)
@@ -591,13 +585,11 @@ bmat <- matrix(0,3,3)
 diag(bmat) <-1
 bmat
 
+#maybe change B-matrix to form of A-matrix???
+
 svar2 <- SVAR(var_data_new_model, estmethod = "direct", Amat=amat2, Bmat=bmat)#getting the svar for the new model
 svar2
 summary(svar2)
 
 irf_responsive2 <- irf(svar2, n.ahead=12)#irf responsive for new order, 12 monts ahead
 plot(irf_responsive2)
-
-#to do:
-#understand how svar works
-
