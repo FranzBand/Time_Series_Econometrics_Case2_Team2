@@ -1,47 +1,76 @@
-#set wd for franci
-setwd("~/Desktop/Time Series Econometrics/Case_Team2/Historical-vintages-of-FRED-MD-2015-01-to-2024-12")
-
+#----Preparing data-----
 #----Load data and packages
 library(dplyr)
 library(ggplot2)
 library(vars)
 library(bootUR)
 
-set.seed(42)
-
-data_full <- read.csv("2020-01.csv")
-head(data_full)
+data_full <- read.csv("2020-01.csv")#we use 2020-01 because
+#it has the data for all months until December 2019
 View(data_full)
 
 data <- data_full[-1, ] #first row is skipped, so it's easier to work with the data
 View(data)
 
+#----get the data/ variables we want----
+#Industrial Production Index
+indpro <- data$INDPRO   #industrial production, id6 (from appendix of Fred MD)
+trans_indpro <- diff(log(indpro)) #transformed indpro according to appendix
+
+plot(indpro, main = "Ind prod Index",
+     type = "l", xlab= "Months since Jan 1959", ylab= "index",
+     xaxt= "n") #remove x-axis labeling
+# Add custom x-axis ticks every 60 months
+axis(1, at = seq(0, max(1:length(trans_fedfunds)), by = 60))
 
 
-#----get the data/ variables we want
-indpro <- data$INDPRO   #industrial production, id6 
-trans_indpro <- diff(log(indpro)) #transformed indpro
-plot(indpro, main = "Ind prod Index", type = "l", xlab= "Months since Jan 1959", ylab= "index")
-plot(trans_indpro, main = "trans Ind prod Index", type= "l", xlab= "Months since Jan 1959", ylab= "index")
+plot(trans_indpro, main = "transformed Ind prod Index",
+     type= "l", xlab= "Months since Jan 1959", ylab= "index",
+     xaxt= "n") #remove x-axis labeling
+# Add custom x-axis ticks every 60 months
+axis(1, at = seq(0, max(1:length(trans_fedfunds)), by = 60))
 #plot transformed according to the transformation code of the appendix
 
+#federal funds rate
 fedfunds <- data$FEDFUNDS  #effective federal funds rate, id84
 trans_fedfunds <- diff(fedfunds)  #transformed fed rate
-plot(fedfunds, main = "fed fund rates", type= "l", xlab= "Months since Jan 1959", ylab= "index")
-plot(trans_fedfunds, main = " trans fed fund rates", type ="l", xlab= "Months since Jan 1959", ylab= "index")
+plot(fedfunds, main = "fed fund rates",
+     type= "l", xlab= "Months since Jan 1959", ylab= "index",
+     xaxt= "n") #remove x-axis labeling
+# Add custom x-axis ticks every 60 months
+axis(1, at = seq(0, max(1:length(trans_fedfunds)), by = 60))
 
-boxplot(fedfunds, main ="Boxplot fed funds rate")
-boxplot(trans_fedfunds, main ="trans Boxplot fed funds rate")
+plot(trans_fedfunds, main = " trans fed fund rates",
+     type ="l", xlab= "Months since Jan 1959", ylab= "index",
+     xaxt= "n") #remove x-axis labeling
+# Add custom x-axis ticks every 60 months
+axis(1, at = seq(0, max(1:length(trans_fedfunds)), by = 60))
 
+#consumer price index
 cpi <- data$CPIAUCSL  #id113
-plot(cpi, main = "consumer price index", type= "l", xlab= "Months since Jan 1959", ylab= "index")
+plot(cpi, main = "consumer price index", type= "l",
+     xlab= "Months since Jan 1959", ylab= "index",
+     xaxt= "n") #remove x-axis labeling
+# Add custom x-axis ticks every 60 months
+axis(1, at = seq(0, max(1:length(trans_fedfunds)), by = 60))
+
+
 trans_cpi <- diff(diff(log(cpi))) #transformed according to appendix
 trans_cpi_1 <- diff(log(cpi)) #transformed with only one diff
-plot(trans_cpi_1, main = "transformed with only one diff, cpi",
-     xlab= "Months since Jan 1959", ylab= "index", type= "l")
-plot(trans_cpi, main = "transformed cpi",
-     xlab= "Months since Jan 1959", ylab= "index", type= "l")
 
+plot(trans_cpi_1, main = "transformed with one diff, cpi",
+     xlab= "Months since Jan 1959", ylab= "index", type= "l",
+     xaxt= "n") #remove x-axis labeling
+# Add custom x-axis ticks every 60 months
+axis(1, at = seq(0, max(1:length(trans_fedfunds)), by = 60))
+
+plot(trans_cpi, main = "transformed cpi",
+     xlab= "Months since Jan 1959", ylab= "index", type= "l",
+     xaxt= "n") #remove x-axis labeling
+# Add custom x-axis ticks every 60 months
+axis(1, at = seq(0, max(1:length(trans_fedfunds)), by = 60))
+
+#----preparing data for VAR----
 #see length of vectors
 l_indpro <- length(trans_indpro)
 l_indpro 
@@ -68,10 +97,11 @@ l_fedfunds
 l_cpi <- length(trans_cpi)
 l_cpi
 
+#----Estimating VAR lag order----
 #put all data together
 var_data <- cbind(trans_indpro, trans_fedfunds, trans_cpi)
 View(var_data)
-lag_selection <- VARselect(var_data, lag.max= 60, type ="const")  #check for info criteria
+lag_selection <- VARselect(var_data, lag.max= 60,type ="const")  #check for info criteria
 print(lag_selection$selection)  #VAR(3) or VAR(4) selected
 
 
