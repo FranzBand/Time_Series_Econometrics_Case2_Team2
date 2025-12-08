@@ -471,7 +471,7 @@ ggplot(plot_data_boot, aes(x = horizon, y = irf)) +
 
 
 
-# -----7. Impulse Response Functions (Cumulative Levels)-----
+# -----Impulse Response Functions (Cumulative Levels)-----
 
 # --- Helper Function: Convert IRF Object to Tidy Data Frame ---
 extract_irf_df <- function(irf_object) {
@@ -540,7 +540,7 @@ ggplot(plot_data, aes(x = horizon, y = irf)) +
     strip.background = element_rect(fill = "#f0f0f0", color = "black")
   )
 
-#-----SVAR models by Franci----
+#-----SVAR models----
 
 #create A-matrix
 # NA = free parameter, 0 = restricted to zero, 1 = fixed (usually diagonal)
