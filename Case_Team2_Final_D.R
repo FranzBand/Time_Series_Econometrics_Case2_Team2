@@ -120,7 +120,7 @@ plot(indpro_log, type="l", main= "ind prod log")#plot without proper laberling o
 
 indpro_d2 <- diff(diff(indpro_log))
 plot(indpro_d2, type="l", main="ind prod diff^2")
-abline(h=0, col= "blue")
+abline(h=0, col= "red")
 
 indpro_d1 <- diff(indpro_log)
 plot(indpro_d1, type="l", main="ind prod diff^1")
