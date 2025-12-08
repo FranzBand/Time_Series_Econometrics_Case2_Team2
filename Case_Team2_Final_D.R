@@ -199,19 +199,14 @@ print(adf_cpi_0)
 #-------- PART: LORIS ---------
 
 # --- Granger causality tests using vars::causality() ---
-
-# Does INDPRO Granger-cause FEDFUNDS?
+#Multivariate Granger causality tests
+# Does the Indrpro cause the others?
 causality(var_model, cause = "trans_indpro")
 
-# Does FEDFUNDS Granger-cause INDPRO?
+# Does the Federal Funds Rate cause the others?
 causality(var_model, cause = "trans_fedfunds")
 
-# Does CPI Granger-cause INDPRO?
-causality(var_model, cause = "trans_cpi")
-
-# You can repeat for each variable as the "cause":
-causality(var_model, cause = "trans_indpro")
-causality(var_model, cause = "trans_fedfunds")
+# Does the CPI cause the others?
 causality(var_model, cause = "trans_cpi")
 
 cat("H0: The lags of the variable named in 'cause' DO NOT help predict the others (no Granger causality).\n")
@@ -260,10 +255,10 @@ biv_granger <- function(y_name, x_name, p, data) {
 
 # All six bivariate Granger tests:
 biv_granger("trans_fedfunds", "trans_indpro", 3, var_data)      # INDPRO -> FEDFUNDS
-biv_granger("trans_indpro", "trans_fedfunds", 3, var_data)      # FEDFUNDS -> INDPRO
-biv_granger("trans_indpro", "trans_cpi", 3, var_data)      # CPI -> INDPRO
 biv_granger("trans_cpi", "trans_indpro", 3, var_data)      # INDPRO -> CPI
+biv_granger("trans_indpro", "trans_fedfunds", 3, var_data)      # FEDFUNDS -> INDPRO
 biv_granger("trans_cpi", "trans_fedfunds", 3, var_data)    # FEDFUNDS -> CPI
+biv_granger("trans_indpro", "trans_cpi", 3, var_data)      # CPI -> INDPRO
 biv_granger("trans_fedfunds", "trans_cpi", 3, var_data)    # CPI -> FEDFUNDS
 
 
