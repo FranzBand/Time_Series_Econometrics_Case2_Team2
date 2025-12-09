@@ -114,8 +114,23 @@ summary(var_model)
 plot(var_model)
 
 #----check for validity of var(3)-----
+#stability check
+#If all roots are smaller than 1, the VAR(3) model is stable
+roots_test <- roots(var_model)
+print(roots_test)
+if(all(roots_test <1)){
+  print("All roots are smaller than 1, the var(3) model is stable")
+}else {
+    print("At least one root is bigger than 1, thus the var(3) model is unstable")
+}
 
-#put stuff from loris in
+#serial correlation test (Portmanteau Test)
+#HO: No serial correlation 
+serial_test <- serial.test(var_model, lags.pt = 12, type= "PT.asymptotic")
+print(serial_test)
+#we reject the H0 hypothesis, meaning that there is serial correlation.
+#having chosen the lag order based on the BIC/ SC, it may happen that there is
+#still information which is not detected by the model
 
 #----Unit root test----
 #----ur test for indpro-----
@@ -562,18 +577,34 @@ plot(irf_responsive1)#plotting the ir function for svar1
 var_data_new <- var_data[, c(1,3,2)]
 lag_selection_new <- VARselect(var_data_new, lag.max= 60, type ="const")  #check for info criteria
 print(lag_selection_new$selection)  #VAR(3) is selected
-var_data_new_model <- VAR(var_data_new, p=3, type="const")
+var_new_model <- VAR(var_data_new, p=3, type="const")
 
-summary(var_data_new_model)
-plot(var_data_new_model)
+summary(var_new_model)
+plot(var_new_model)
 
 
 #----check for validity of svar(3)_2-----
-#put stuff from loris in
 
+#stability check
+#If all roots are smaller than 1, the VAR(3) model is stable
+roots_test_new <- roots(var_new_model)
+print(roots_test_new)
+if(all(roots_test_new <1)){
+  print("All roots are smaller than 1, the svar(3)_2 model is stable")
+}else {
+  print("At least one root is bigger than 1, thus the svar(3)_2 model is unstable")
+}
+
+#serial correlation test (Portmanteau Test)
+#HO: No serial correlation 
+serial_test_new <- serial.test(var_new_model, lags.pt = 12, type= "PT.asymptotic")
+print(serial_test_new)
+#we reject the H0 hypothesis, meaning that there is serial correlation.
+#having chosen the lag order based on the BIC/ SC, it may happen that there is
+#still information which is not detected by the model
 
 #-----impulsive response functions for new order-----
-irf_var_new <- irf(var_data_new_model, n.ahead = 12, boot= TRUE, ortho = TRUE)
+irf_var_new <- irf(var_new_model, n.ahead = 12, boot= TRUE, ortho = TRUE)
 plot(irf_var_new)
 
 ##svar2
@@ -589,7 +620,7 @@ bmat
 
 #maybe change B-matrix to form of A-matrix???
 
-svar2 <- SVAR(var_data_new_model, estmethod = "direct", Amat=amat2, Bmat=bmat)#getting the svar for the new model
+svar2 <- SVAR(var_new_model, estmethod = "direct", Amat=amat2, Bmat=bmat)#getting the svar for the new model
 svar2
 summary(svar2)
 
