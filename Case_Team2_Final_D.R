@@ -625,5 +625,5 @@ svar2 <- SVAR(var_new_model, estmethod = "direct", Amat=amat2, Bmat=bmat)#gettin
 svar2
 summary(svar2)
 
-irf_responsive2 <- irf(svar2, n.ahead=12)#irf responsive for new order, 12 months ahead
+irf_responsive2 <- irf(svar2, n.ahead=12, boot= TRUE, ortho = TRUE)#irf responsive for new order, 12 months ahead
 plot(irf_responsive2)
