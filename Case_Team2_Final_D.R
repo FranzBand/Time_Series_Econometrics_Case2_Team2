@@ -135,7 +135,7 @@ print(serial_test)
 #----Unit root test----
 #----ur test for indpro-----
 indpro_log <- log(indpro)
-plot(indpro_log, type="l", main= "ind prod log")#plot without proper laberling of axis,
+plot(indpro_log, type="l", main= "ind prod log")#plot without proper labeling of axis,
 #because it's just to see if it needs "trend" or "intercept" for the adf
 
 indpro_d2 <- diff(diff(indpro_log))
@@ -162,8 +162,9 @@ print(adf_indpro_0)
 #trend, because a clear trend is visible in the plot.
 #Fail to reject H0 hypothesis, time series has an unit root
 
+
 #-----fedfunds unit root test-----
-plot(fedfunds, type="l", main= "fed funds rate")#plot without proper laberling of axis,
+plot(fedfunds, type="l", main= "fed funds rate")#plot without proper labeling of axis,
 #because it's just to see if it needs "trend" or "intercept" for the adf
 
 fedfunds_d2 <- diff(diff(fedfunds))
@@ -190,7 +191,7 @@ print(adf_fedfunds_0)
 #Fail to reject H0 hypothesis, time series has an unit root
 
 #----cpi unit root test-----
-plot(cpi, type="l", main= "consumer price index")#plot without proper laberling of axis,
+plot(cpi, type="l", main= "consumer price index")#plot without proper labeling of axis,
 #because it's just to see if it needs "trend" or "intercept" for the adf
 
 cpi_d2 <- diff(diff(cpi))
