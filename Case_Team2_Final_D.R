@@ -23,14 +23,14 @@ plot(indpro, main = "Ind prod Index",
      type = "l", xlab= "Months since Jan 1959", ylab= "index",
      xaxt= "n") #remove x-axis labeling
 # Add custom x-axis ticks every 60 months
-axis(1, at = seq(0, max(1:length(trans_fedfunds)), by = 60))
+axis(1, at = seq(0, max(1:length(indpro)), by = 60))
 
 
 plot(trans_indpro, main = "transformed Ind prod Index",
      type= "l", xlab= "Months since Jan 1959", ylab= "index",
      xaxt= "n") #remove x-axis labeling
 # Add custom x-axis ticks every 60 months
-axis(1, at = seq(0, max(1:length(trans_fedfunds)), by = 60))
+axis(1, at = seq(0, max(1:length(trans_indpro)), by = 60))
 #plot transformed according to the transformation code of the appendix
 
 #federal funds rate
@@ -50,27 +50,27 @@ axis(1, at = seq(0, max(1:length(trans_fedfunds)), by = 60))
 
 #consumer price index
 cpi <- data$CPIAUCSL  #id113
+
+trans_cpi <- diff(diff(log(cpi))) #transformed according to appendix
+trans_cpi_1 <- diff(log(cpi)) #transformed with only one diff
+
 plot(cpi, main = "consumer price index", type= "l",
      xlab= "Months since Jan 1959", ylab= "index",
      xaxt= "n") #remove x-axis labeling
 # Add custom x-axis ticks every 60 months
-axis(1, at = seq(0, max(1:length(trans_fedfunds)), by = 60))
-
-
-trans_cpi <- diff(diff(log(cpi))) #transformed according to appendix
-trans_cpi_1 <- diff(log(cpi)) #transformed with only one diff
+axis(1, at = seq(0, max(1:length(cpi)), by = 60))
 
 plot(trans_cpi_1, main = "transformed with one diff, cpi",
      xlab= "Months since Jan 1959", ylab= "index", type= "l",
      xaxt= "n") #remove x-axis labeling
 # Add custom x-axis ticks every 60 months
-axis(1, at = seq(0, max(1:length(trans_fedfunds)), by = 60))
+axis(1, at = seq(0, max(1:length(trans_cpi_1)), by = 60))
 
 plot(trans_cpi, main = "transformed cpi",
      xlab= "Months since Jan 1959", ylab= "index", type= "l",
      xaxt= "n") #remove x-axis labeling
 # Add custom x-axis ticks every 60 months
-axis(1, at = seq(0, max(1:length(trans_fedfunds)), by = 60))
+axis(1, at = seq(0, max(1:length(trans_cpi)), by = 60))
 
 #----preparing data for VAR----
 #see length of vectors
