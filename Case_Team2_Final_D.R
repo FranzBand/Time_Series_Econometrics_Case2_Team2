@@ -186,9 +186,9 @@ print(adf_fedfunds_1)
 #intercept, because no clear trend is visible in the plot.
 #Reject H0 hypothesis, time series is stationary
 
-adf_fedfunds_0 <- adf(fedfunds, deterministics= "intercept")
+adf_fedfunds_0 <- adf(fedfunds, deterministics= "trend")
 print(adf_fedfunds_0)
-#trend, because a clear trend is visible in the plot.
+#trend, because a clear trend is visible in the plot
 #Fail to reject H0 hypothesis, time series has an unit root
 
 #----cpi unit root test-----
@@ -207,16 +207,18 @@ abline(h=0.5, col= "green")
 
 adf_cpi_2 <- adf(diff(cpi, differences=2), deterministics= "intercept")
 print(adf_cpi_2)
+#intercept, because no clear trend is visible in the plot.
 #reject h0 hypothesis, series is stationary of order I(2)
 
 adf_cpi_1 <- adf(diff(cpi, differences=1), deterministics= "intercept")
 print(adf_cpi_1)
+#intercept, because no clear trend is visible in the plot.
 #reject the h0 hypothesis, series is stationary of order I(1)
 
 adf_cpi_0 <- adf(cpi, deterministics= "trend")
 print(adf_cpi_0)
+#trend, because a clear trend is visible in the plot.
 #not possible to reject the H0 hypothesis, time series has a unit root
-
 
 
 #----- Granger causality tests using vars::causality() ----
@@ -356,10 +358,6 @@ plot(irf_levels)
 
 
 # -----PLOT FOR REDUCED-FORM POINT ESTIMATES (NO CI)-----
-
-# 0. Required package 
-if(!require(reshape2)) install.packages("reshape2")
-library(reshape2)
 
 # 1. Convert Point Estimate Object to Data Frame
 extract_point_irf <- function(irf_object) {
@@ -559,21 +557,21 @@ ggplot(plot_data, aes(x = horizon, y = irf)) +
 #-----SVAR models----
 #-----new ordering of data-----
 #var_data_new has the order: indpro -> cpi -> fed funds
-var_data_new <- var_data[, c(1,3,2)]
-lag_selection_new <- VARselect(var_data_new, lag.max= 60, type ="const")  #check for info criteria
+svar_data <- var_data[, c(1,3,2)]
+lag_selection_new <- VARselect(svar_data, lag.max= 18, type ="const")  #check for info criteria
 print(lag_selection_new$selection)  #VAR(3) is selected
-var_new_model <- VAR(var_data_new, p=3, type="const")
+svar_model<- VAR(svar_data, p=3, type="const")
 
-summary(var_new_model)
-plot(var_new_model)
+summary(svar_model)
+plot(svar_model)
 
 #----check for validity of svar(3)-----
 
 #stability check
 #If all roots are smaller than 1, the VAR(3) model is stable
-roots_test_new <- roots(var_new_model)
-print(roots_test_new)
-if(all(roots_test_new <1)){
+roots_test_svar <- roots(svar_model)
+print(roots_test_svar)
+if(all(roots_test_svar <1)){
   print("All roots are smaller than 1, the svar(3)_2 model is stable")
 }else {
   print("At least one root is bigger than 1, thus the svar(3)_2 model is unstable")
@@ -581,52 +579,30 @@ if(all(roots_test_new <1)){
 
 #serial correlation test (Portmanteau Test)
 #HO: No serial correlation 
-serial_test_new <- serial.test(var_new_model, lags.pt = 12, type= "PT.asymptotic")
-print(serial_test_new)
+serial_test_svar <- serial.test(svar_model, lags.pt = 12, type= "PT.asymptotic")
+print(serial_test_svar)
 #we reject the H0 hypothesis, meaning that there is serial correlation.
 #having chosen the lag order based on the BIC/ SC, it may happen that there is
 #still information which is not detected by the model
 
 #-----impulsive response functions for new order-----
-irf_var_new <- irf(var_new_model, n.ahead = 12, boot= TRUE, ortho = TRUE)
-plot(irf_var_new)
-
+set.seed(123)
+irf_svar <- irf(svar_model, n.ahead = 24, boot= TRUE, ci= 0.95, runs=500, ortho = TRUE)
+plot(irf_svar)
+#ortho= TRUE <--- THIS IS THE KEY DIFFERENCE (Structural Shocks)
 
 #-----new part for svar-----
-# ==============================================================================
-# PART: FRANCESCO - STRUCTURAL VAR (SVAR)
-# Identification Strategy: Recursive (Cholesky) Ordering
-# ==============================================================================
 
 # 1. Define the Correct Recursive Order
 # Theory (Bernanke et al. 2005): 
 # Slow-Moving (Prod, Prices) -> Policy (Fed Funds)
 # This assumes the Fed reacts instantly to the economy, but the economy reacts with a lag.
-svar_ordering <- c("trans_indpro", "trans_cpi", "trans_fedfunds")
 
-# 2. Re-build the dataset in this specific order
-svar_data <- var_data[, svar_ordering]
-
-# 3. Estimate the SVAR (It's just a VAR on the reordered data for Cholesky)
-svar_model <- VAR(svar_data, p = 3, type = "const")
-summary(svar_model)
-
-# 4. Compute STRUCTURAL Impulse Response Functions
 # ortho = TRUE enables the Cholesky decomposition based on the column order
-set.seed(123)
-irf_svar <- irf(
-  svar_model,
-  n.ahead = 24,
-  boot    = TRUE,
-  ci      = 0.95,
-  runs    = 500,
-  ortho   = TRUE   # <--- THIS IS THE KEY DIFFERENCE (Structural Shocks)
-)
 
-# ==============================================================================
-# PLOT FOR STRUCTURAL IRFs
-# ==============================================================================
 
+
+#----plotting of irf for svar----
 # Helper function to extract data for ggplot
 extract_boot_irf <- function(irf_object) {
   impulse_names <- names(irf_object$irf)
