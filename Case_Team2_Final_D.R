@@ -216,9 +216,9 @@ causality(var_model, cause = "trans_cpi")
 cat("H0: The lags of the variable named in 'cause' DO NOT help predict the others (no Granger causality).\n")
 cat("H1: At least one lag of the 'cause' variable DOES help predict the others (there IS Granger causality).\n")
 
-# --- Function for bivariate Granger causality test ---
+# ---------  Function for bivariate Granger causality test --------- 
 
-# --------- Helper: bivariate Granger test (X -> Y) ---------
+# bivariate Granger test (X -> Y) 
 # y_name : name of dependent variable (string)
 # x_name : name of "cause" variable (string)
 # p      : number of lags in our case 3
@@ -257,13 +257,13 @@ biv_granger <- function(y_name, x_name, p, data) {
   anova(res, unres)
 }
 
-# All six bivariate Granger tests:                              The arrow mean Granger causes.
+# All six bivariate Granger tests:                              Arrow = Granger causes
 biv_granger("trans_fedfunds", "trans_indpro", 3, var_data)      # INDPRO -> FEDFUNDS
-biv_granger("trans_cpi", "trans_indpro", 3, var_data)      # INDPRO -> CPI
+biv_granger("trans_cpi", "trans_indpro", 3, var_data)           # INDPRO -> CPI
 biv_granger("trans_indpro", "trans_fedfunds", 3, var_data)      # FEDFUNDS -> INDPRO
-biv_granger("trans_cpi", "trans_fedfunds", 3, var_data)    # FEDFUNDS -> CPI
-biv_granger("trans_indpro", "trans_cpi", 3, var_data)      # CPI -> INDPRO
-biv_granger("trans_fedfunds", "trans_cpi", 3, var_data)    # CPI -> FEDFUNDS
+biv_granger("trans_cpi", "trans_fedfunds", 3, var_data)         # FEDFUNDS -> CPI
+biv_granger("trans_indpro", "trans_cpi", 3, var_data)           # CPI -> INDPRO
+biv_granger("trans_fedfunds", "trans_cpi", 3, var_data)         # CPI -> FEDFUNDS
 
 
 # ---- Impulse Response Functions for reduced-form VARs ----
@@ -291,17 +291,17 @@ irf_rf_boot <- irf(
   n.ahead  = 24,
   boot     = TRUE,
   ci       = 0.95,
-  runs     = 500,       # you can increase to 1000 if time allows
+  runs     = 500,      
   ortho    = FALSE
 )
 
 plot(irf_rf_boot)
 
 # Helper functions for cumulation
-cum_diff1 <- function(x) apply(x, 2, cumsum)                 # for diff and diff log
-cum_diff2 <- function(x) apply(apply(x, 2, cumsum), 2, cumsum) # for diff diff log
+cum_diff1 <- function(x) apply(x, 2, cumsum)                    # for diff and diff log
+cum_diff2 <- function(x) apply(apply(x, 2, cumsum), 2, cumsum)  # for diff diff log
 
-# Start from the bootstrap IRFs
+# We start from the bootstrap IRFs
 irf_levels <- irf_rf_boot
 
 # Transform point estimates
@@ -337,9 +337,14 @@ irf_levels$Upper <- lapply(irf_rf_boot$Upper, function(m) {
 # Plot IRFs interpreted as responses of the original series in (log-)levels
 plot(irf_levels)
 
+
 # -----PLOT FOR REDUCED-FORM POINT ESTIMATES (NO CI)-----
 
-# 1. Helper Function: Convert Point Estimate Object to Data Frame
+# 0. Required package 
+if(!require(reshape2)) install.packages("reshape2")
+library(reshape2)
+
+# 1. Convert Point Estimate Object to Data Frame
 extract_point_irf <- function(irf_object) {
   impulse_names <- names(irf_object$irf)
   df_list <- list()
@@ -362,29 +367,25 @@ extract_point_irf <- function(irf_object) {
 }
 
 # 2. Extract Data from your existing object 'irf_rf_point'
-# (Make sure you ran the 'irf_rf_point' block from earlier!)
 plot_data_point <- extract_point_irf(irf_rf_point)
 
-# 3. Create Nice Labels (Updated for cpi)
+# 3. Labels
 label_map <- c(
   "trans_indpro"   = "Ind. Production", 
   "trans_fedfunds" = "Fed Funds Rate", 
-  "trans_cpi"      = "CPI (Inflation)"
+  "trans_cpi"      = "CPI"
 )
 
 # 4. Generate the Plot
 ggplot(plot_data_point, aes(x = horizon, y = irf)) +
-  # Main Line (Black)
   geom_line(color = "black", linewidth = 0.8) +
-  
-  # Add Zero Reference Line (Red)
   geom_hline(yintercept = 0, color = "red", linetype = "solid", linewidth = 0.5) +
   
   # Grid Layout: Rows = Responses, Cols = Impulses
   facet_grid(response ~ impulse, scales = "free_y", 
              labeller = labeller(impulse = label_map, response = label_map)) +
   
-  # Clean Theme
+  # Theme
   theme_bw() +
   labs(
     title = "Impulse Response Functions (Reduced Form)",
@@ -401,7 +402,7 @@ ggplot(plot_data_point, aes(x = horizon, y = irf)) +
 
 #------ PLOT FOR BOOTSTRAPPED IRFs (WITH 95% CI)-----
 
-# 1. Helper Function: Convert Bootstrapped IRF Object to Data Frame
+# 1. Convert Bootstrapped IRF Object to Data Frame
 extract_boot_irf <- function(irf_object) {
   impulse_names <- names(irf_object$irf)
   df_list <- list()
@@ -432,33 +433,27 @@ extract_boot_irf <- function(irf_object) {
   return(do.call(rbind, df_list))
 }
 
-# 2. Extract Data from your existing object 'irf_rf_boot'
-# (Make sure you ran the 'irf_rf_boot' block with boot=TRUE!)
+# 2. Extract Data from our existing object 'irf_rf_boot'
 plot_data_boot <- extract_boot_irf(irf_rf_boot)
 
-# 3. Create Nice Labels (Updated for cpi)
+# 3. Labels
 label_map <- c(
   "trans_indpro"   = "Ind. Production", 
   "trans_fedfunds" = "Fed Funds Rate", 
-  "trans_cpi"      = "CPI (Inflation)"
+  "trans_cpi"      = "CPI"
 )
 
 # 4. Generate the Plot
 ggplot(plot_data_boot, aes(x = horizon, y = irf)) +
-  # Confidence Interval Ribbon (Shaded)
   geom_ribbon(aes(ymin = lower, ymax = upper), fill = "grey70", alpha = 0.5) +
-  
-  # Main Line (Black)
   geom_line(color = "black", linewidth = 0.8) +
-  
-  # Add Zero Reference Line (Red)
   geom_hline(yintercept = 0, color = "red", linetype = "solid", linewidth = 0.5) +
   
   # Grid Layout: Rows = Responses, Cols = Impulses
   facet_grid(response ~ impulse, scales = "free_y", 
              labeller = labeller(impulse = label_map, response = label_map)) +
   
-  # Clean Theme
+  # Theme
   theme_bw() +
   labs(
     title = "Impulse Response Functions (Reduced Form)",
@@ -477,7 +472,7 @@ ggplot(plot_data_boot, aes(x = horizon, y = irf)) +
 
 # -----Impulse Response Functions (Cumulative Levels)-----
 
-# --- Helper Function: Convert IRF Object to Tidy Data Frame ---
+# Convert IRF Object to Tidy Data Frame
 extract_irf_df <- function(irf_object) {
   impulse_names <- names(irf_object$irf)
   df_list <- list()
@@ -508,17 +503,17 @@ extract_irf_df <- function(irf_object) {
 
 # --- Generate the Plot ---
 
-# 1. Get data from your calculated levels object
+# 1. Get data from the calculated levels object
 plot_data <- extract_irf_df(irf_levels) 
 
-# 2. Define nice labels for the graph (Updated for cpi)
+# 2. Labels
 label_map <- c(
   "trans_indpro"   = "Ind. Production", 
   "trans_fedfunds" = "Fed Funds Rate", 
-  "trans_cpi"      = "CPI (Inflation)"
+  "trans_cpi"      = "CPI (Price level)"
 )
 
-# 3. Create the Grid Plot (CORRECTED)
+# 3. Grid Plot
 ggplot(plot_data, aes(x = horizon, y = irf)) +
   # Confidence Interval (Shaded Area)
   geom_ribbon(aes(ymin = lower, ymax = upper), fill = "steelblue", alpha = 0.2) +
