@@ -556,23 +556,6 @@ ggplot(plot_data, aes(x = horizon, y = irf)) +
   )
 
 #-----SVAR models----
-
-#create A-matrix
-# NA = free parameter, 0 = restricted to zero, 1 = fixed (usually diagonal)
-amat <- matrix(NA, 3, 3)
-diag(amat) <- 1        # each variable shocks itself
-amat[2,1] <- 0         # y1 does NOT contemporaneously affect y2
-amat[3,1:2] <- 0       # y1, y2 do NOT contemporaneously affect y3
-amat
-
-#svar 1 has the order: indpro -> fed funds -> cpi
-svar1 <- SVAR(var_model, estmethod = "direct", Amat = amat)#get svar by a matrix method
-svar1
-summary(svar1)#look at svar1 responses
-
-irf_responsive1 <- irf(svar1, n.ahead = 12)
-plot(irf_responsive1)#plotting the ir function for svar1  
-
 #-----new ordering of data-----
 #var_data_new has the order: indpro -> cpi -> fed funds
 var_data_new <- var_data[, c(1,3,2)]
@@ -583,8 +566,7 @@ var_new_model <- VAR(var_data_new, p=3, type="const")
 summary(var_new_model)
 plot(var_new_model)
 
-
-#----check for validity of svar(3)_2-----
+#----check for validity of svar(3)-----
 
 #stability check
 #If all roots are smaller than 1, the VAR(3) model is stable
@@ -608,12 +590,12 @@ print(serial_test_new)
 irf_var_new <- irf(var_new_model, n.ahead = 12, boot= TRUE, ortho = TRUE)
 plot(irf_var_new)
 
-##svar2
-amat2 <- matrix(NA, 3,3)#a matrix
-diag(amat2) <- 1
-amat2 [2,1] <- 0
-amat2 [3,1:2] <-0
-amat2
+##svar
+amat <- matrix(NA, 3,3)#a matrix
+diag(amat) <- 1
+amat [2,1] <- 0
+amat [3,1:2] <-0
+amat
 
 bmat <- matrix(0,3,3)
 diag(bmat) <-1
@@ -621,9 +603,105 @@ bmat
 
 #maybe change B-matrix to form of A-matrix???
 
-svar2 <- SVAR(var_new_model, estmethod = "direct", Amat=amat2, Bmat=bmat)#getting the svar for the new model
-svar2
-summary(svar2)
+svar <- SVAR(var_new_model, estmethod = "direct", Amat=amat, Bmat=bmat)#getting the svar for the new model
+svar
+summary(svar)
 
-irf_responsive2 <- irf(svar2, n.ahead=12, boot= TRUE, ortho = TRUE)#irf responsive for new order, 12 months ahead
-plot(irf_responsive2)
+irf_svar <- irf(svar, n.ahead=12, boot= TRUE, ortho = TRUE)#irf responsive for new order, 12 months ahead
+plot(irf_svar)
+
+#-----new part for svar-----
+# ==============================================================================
+# PART: FRANCESCO - STRUCTURAL VAR (SVAR)
+# Identification Strategy: Recursive (Cholesky) Ordering
+# ==============================================================================
+
+library(vars)
+library(ggplot2)
+library(reshape2)
+
+# 1. Define the Correct Recursive Order
+# Theory (Bernanke et al. 2005): 
+# Slow-Moving (Prod, Prices) -> Policy (Fed Funds)
+# This assumes the Fed reacts instantly to the economy, but the economy reacts with a lag.
+svar_ordering <- c("trans_indpro", "trans_cpi", "trans_fedfunds")
+
+# 2. Re-build the dataset in this specific order
+svar_data <- var_data[, svar_ordering]
+
+# 3. Estimate the SVAR (It's just a VAR on the reordered data for Cholesky)
+svar_model <- VAR(svar_data, p = 3, type = "const")
+summary(svar_model)
+
+# 4. Compute STRUCTURAL Impulse Response Functions
+# ortho = TRUE enables the Cholesky decomposition based on the column order
+set.seed(123)
+irf_svar <- irf(
+  svar_model,
+  n.ahead = 24,
+  boot    = TRUE,
+  ci      = 0.95,
+  runs    = 500,
+  ortho   = TRUE   # <--- THIS IS THE KEY DIFFERENCE (Structural Shocks)
+)
+
+# ==============================================================================
+# PLOT FOR STRUCTURAL IRFs
+# ==============================================================================
+
+# Helper function to extract data for ggplot
+extract_boot_irf <- function(irf_object) {
+  impulse_names <- names(irf_object$irf)
+  df_list <- list()
+  
+  for (imp in impulse_names) {
+    pe <- as.data.frame(irf_object$irf[[imp]])
+    lo <- as.data.frame(irf_object$Lower[[imp]])
+    up <- as.data.frame(irf_object$Upper[[imp]])
+    
+    pe$horizon <- lo$horizon <- up$horizon <- 0:(nrow(pe)-1)
+    pe$impulse <- lo$impulse <- up$impulse <- imp
+    
+    pe_long <- melt(pe, id.vars = c("horizon", "impulse"), variable.name = "response", value.name = "irf")
+    lo_long <- melt(lo, id.vars = c("horizon", "impulse"), variable.name = "response", value.name = "lower")
+    up_long <- melt(up, id.vars = c("horizon", "impulse"), variable.name = "response", value.name = "upper")
+    
+    merged <- merge(pe_long, lo_long, by=c("horizon", "impulse", "response"))
+    merged <- merge(merged, up_long, by=c("horizon", "impulse", "response"))
+    df_list[[imp]] <- merged
+  }
+  return(do.call(rbind, df_list))
+}
+
+# Extract and Label
+plot_data_svar <- extract_boot_irf(irf_svar)
+
+# Create nice labels corresponding to the new order
+label_map <- c(
+  "trans_indpro"   = "Ind. Production", 
+  "trans_cpi"      = "CPI (Inflation)",
+  "trans_fedfunds" = "Fed Funds Rate"
+)
+
+# Generate Plot
+ggplot(plot_data_svar, aes(x = horizon, y = irf)) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), fill = "firebrick", alpha = 0.3) + # Different color for SVAR
+  geom_line(color = "firebrick", linewidth = 0.8) +
+  geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
+  
+  facet_grid(response ~ impulse, scales = "free_y", 
+             labeller = labeller(impulse = label_map, response = label_map)) +
+  
+  theme_bw() +
+  labs(
+    title = "Structural Impulse Response Functions (SVAR)",
+    subtitle = "Identified via Cholesky Ordering: IndPro -> CPI -> FedFunds",
+    caption = "Note: Fed Funds responds instantly to others; Others respond with lag.",
+    x = "Horizon (Months)",
+    y = "Structural Response"
+  ) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    strip.text = element_text(face = "bold", size = 10),
+    strip.background = element_rect(fill = "#f0f0f0", color = "black")
+  )
