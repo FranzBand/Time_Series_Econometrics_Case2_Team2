@@ -633,11 +633,14 @@ svar_data <- var_data[, svar_ordering]
 svar_model <- VAR(svar_data, p = 3, type = "const")
 summary(svar_model)
 
+svar_model_t <- SVAR(svar_model, p = 3, type = "const", Amat=amat)
+summary(svar_model)
+
 # 4. Compute STRUCTURAL Impulse Response Functions
 # ortho = TRUE enables the Cholesky decomposition based on the column order
 set.seed(123)
 irf_svar <- irf(
-  svar_model,
+  svar_model_t,
   n.ahead = 24,
   boot    = TRUE,
   ci      = 0.95,
