@@ -114,16 +114,9 @@ summary(var_model)
 plot(var_model)
 
 #----check for validity of var(3)-----
-serial_test <- serial.test(var_model, lags.pt = 12, type = "PT.asymptotic")
-print(serial_test)
 
+#put stuff from loris in
 
-?serial.test
-
-arch_test <- arch.test(var_model, lags.multi=12)
-print(arch_test)
-
-?arch.test()
 #----Unit root test----
 #----ur test for indpro-----
 indpro_log <- log(indpro)
@@ -581,25 +574,8 @@ plot(var_data_new_model)
 
 
 #----check for validity of svar(3)_2-----
-serial_test_new <- serial.test(var_data_new_model, lags.pt = 12, type = "PT.asymptotic")
-print(serial_test_new)
+#put stuff from loris in
 
-?serial.test
-
-arch_test_new <- arch.test(var_data_new_model, lags.multi=12)
-print(arch_test_new)
-
-library(strucchange)
-chow_test <- Fstats(indpro ~ 1, from = 100)
-plot(chow_test)
-
-library(strucchange)
-bp <- breakpoints(indpro ~ fedfunds + cpi, h = 4)
-summary(bp)
-
-sum(is.na(trans_cpi))
-sum(is.na(trans_fedfunds))
-sum(is.na(trans_indpro))
 
 #-----impulsive response functions for new order-----
 irf_var_new <- irf(var_data_new_model, n.ahead = 12, boot= TRUE, ortho = TRUE)
