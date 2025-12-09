@@ -217,7 +217,7 @@ cat("H1: At least one lag of the 'cause' variable DOES help predict the others (
 # --------- Helper: bivariate Granger test (X -> Y) ---------
 # y_name : name of dependent variable (string)
 # x_name : name of "cause" variable (string)
-# p      : number of lags
+# p      : number of lags in our case 3
 # data   : matrix or data.frame with columns y_name and x_name (here: var_data)
 
 biv_granger <- function(y_name, x_name, p, data) {
@@ -253,7 +253,7 @@ biv_granger <- function(y_name, x_name, p, data) {
   anova(res, unres)
 }
 
-# All six bivariate Granger tests:
+# All six bivariate Granger tests:                              The arrow mean Granger causes.
 biv_granger("trans_fedfunds", "trans_indpro", 3, var_data)      # INDPRO -> FEDFUNDS
 biv_granger("trans_cpi", "trans_indpro", 3, var_data)      # INDPRO -> CPI
 biv_granger("trans_indpro", "trans_fedfunds", 3, var_data)      # FEDFUNDS -> INDPRO
