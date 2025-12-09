@@ -5,6 +5,7 @@ library(ggplot2)
 library(vars)
 library(bootUR)
 library(stats)
+library(reshape2)
 
 data_full <- read.csv("2020-01.csv")#we use 2020-01 because
 #it has the data for all months until December 2019
@@ -590,35 +591,12 @@ print(serial_test_new)
 irf_var_new <- irf(var_new_model, n.ahead = 12, boot= TRUE, ortho = TRUE)
 plot(irf_var_new)
 
-##svar
-amat <- matrix(NA, 3,3)#a matrix
-diag(amat) <- 1
-amat [2,1] <- 0
-amat [3,1:2] <-0
-amat
-
-bmat <- matrix(0,3,3)
-diag(bmat) <-1
-bmat
-
-#maybe change B-matrix to form of A-matrix???
-
-svar <- SVAR(var_new_model, estmethod = "direct", Amat=amat, Bmat=bmat)#getting the svar for the new model
-svar
-summary(svar)
-
-irf_svar <- irf(svar, n.ahead=12, boot= TRUE, ortho = TRUE)#irf responsive for new order, 12 months ahead
-plot(irf_svar)
 
 #-----new part for svar-----
 # ==============================================================================
 # PART: FRANCESCO - STRUCTURAL VAR (SVAR)
 # Identification Strategy: Recursive (Cholesky) Ordering
 # ==============================================================================
-
-library(vars)
-library(ggplot2)
-library(reshape2)
 
 # 1. Define the Correct Recursive Order
 # Theory (Bernanke et al. 2005): 
@@ -633,14 +611,11 @@ svar_data <- var_data[, svar_ordering]
 svar_model <- VAR(svar_data, p = 3, type = "const")
 summary(svar_model)
 
-svar_model_t <- SVAR(svar_model, p = 3, type = "const", Amat=amat)
-summary(svar_model)
-
 # 4. Compute STRUCTURAL Impulse Response Functions
 # ortho = TRUE enables the Cholesky decomposition based on the column order
 set.seed(123)
 irf_svar <- irf(
-  svar_model_t,
+  svar_model,
   n.ahead = 24,
   boot    = TRUE,
   ci      = 0.95,
@@ -682,7 +657,7 @@ plot_data_svar <- extract_boot_irf(irf_svar)
 # Create nice labels corresponding to the new order
 label_map <- c(
   "trans_indpro"   = "Ind. Production", 
-  "trans_cpi"      = "CPI (Inflation)",
+  "trans_cpi"      = "CPI",
   "trans_fedfunds" = "Fed Funds Rate"
 )
 
