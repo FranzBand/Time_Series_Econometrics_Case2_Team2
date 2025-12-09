@@ -4,6 +4,7 @@ library(dplyr)
 library(ggplot2)
 library(vars)
 library(bootUR)
+library(stats)
 
 data_full <- read.csv("2020-01.csv")#we use 2020-01 because
 #it has the data for all months until December 2019
@@ -101,7 +102,7 @@ l_cpi
 #put all data together
 var_data <- cbind(trans_indpro, trans_fedfunds, trans_cpi)
 View(var_data)
-lag_selection <- VARselect(var_data, lag.max= 60,type ="const")  #check for info criteria
+lag_selection <- VARselect(var_data, lag.max= 18,type ="const")  #check for info criteria
 print(lag_selection$selection)  #VAR(3) or VAR(4) selected
 
 
@@ -112,6 +113,17 @@ summary(var_model)
 
 plot(var_model)
 
+#----check for validity of var(3)-----
+serial_test <- serial.test(var_model, lags.pt = 12, type = "PT.asymptotic")
+print(serial_test)
+
+
+?serial.test
+
+arch_test <- arch.test(var_model, lags.multi=12)
+print(arch_test)
+
+?arch.test()
 #----Unit root test----
 #----ur test for indpro-----
 indpro_log <- log(indpro)
@@ -196,9 +208,8 @@ print(adf_cpi_0)
 #not possible to reject the H0 hypothesis, time series has a unit root
 
 
-#-------- PART: LORIS ---------
 
-# --- Granger causality tests using vars::causality() ---
+#----- Granger causality tests using vars::causality() ----
 #Multivariate Granger causality tests
 # Does the Indrpro cause the others?
 causality(var_model, cause = "trans_indpro")
@@ -568,7 +579,29 @@ var_data_new_model <- VAR(var_data_new, p=3, type="const")
 summary(var_data_new_model)
 plot(var_data_new_model)
 
-#impulsive response functions for new order
+
+#----check for validity of svar(3)_2-----
+serial_test_new <- serial.test(var_data_new_model, lags.pt = 12, type = "PT.asymptotic")
+print(serial_test_new)
+
+?serial.test
+
+arch_test_new <- arch.test(var_data_new_model, lags.multi=12)
+print(arch_test_new)
+
+library(strucchange)
+chow_test <- Fstats(indpro ~ 1, from = 100)
+plot(chow_test)
+
+library(strucchange)
+bp <- breakpoints(indpro ~ fedfunds + cpi, h = 4)
+summary(bp)
+
+sum(is.na(trans_cpi))
+sum(is.na(trans_fedfunds))
+sum(is.na(trans_indpro))
+
+#-----impulsive response functions for new order-----
 irf_var_new <- irf(var_data_new_model, n.ahead = 12, boot= TRUE, ortho = TRUE)
 plot(irf_var_new)
 
