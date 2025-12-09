@@ -4,6 +4,7 @@ library(dplyr)
 library(ggplot2)
 library(vars)
 library(bootUR)
+library(stats)
 
 data_full <- read.csv("2020-01.csv")#we use 2020-01 because
 #it has the data for all months until December 2019
@@ -101,7 +102,7 @@ l_cpi
 #put all data together
 var_data <- cbind(trans_indpro, trans_fedfunds, trans_cpi)
 View(var_data)
-lag_selection <- VARselect(var_data, lag.max= 60,type ="const")  #check for info criteria
+lag_selection <- VARselect(var_data, lag.max= 18,type ="const")  #check for info criteria
 print(lag_selection$selection)  #VAR(3) or VAR(4) selected
 
 
@@ -112,6 +113,10 @@ summary(var_model)
 
 plot(var_model)
 
+#----check for validity of var(3)-----
+
+#put stuff from loris in
+
 #----Unit root test----
 #----ur test for indpro-----
 indpro_log <- log(indpro)
@@ -120,7 +125,7 @@ plot(indpro_log, type="l", main= "ind prod log")#plot without proper laberling o
 
 indpro_d2 <- diff(diff(indpro_log))
 plot(indpro_d2, type="l", main="ind prod diff^2")
-abline(h=0, col= "blue")
+abline(h=0, col= "red")
 
 indpro_d1 <- diff(indpro_log)
 plot(indpro_d1, type="l", main="ind prod diff^1")
@@ -196,9 +201,8 @@ print(adf_cpi_0)
 #not possible to reject the H0 hypothesis, time series has a unit root
 
 
-#-------- PART: LORIS ---------
 
-# --- Granger causality tests using vars::causality() ---
+#----- Granger causality tests using vars::causality() ----
 #Multivariate Granger causality tests
 # Does the Indrpro cause the others?
 causality(var_model, cause = "trans_indpro")
@@ -471,7 +475,7 @@ ggplot(plot_data_boot, aes(x = horizon, y = irf)) +
 
 
 
-# -----7. Impulse Response Functions (Cumulative Levels)-----
+# -----Impulse Response Functions (Cumulative Levels)-----
 
 # --- Helper Function: Convert IRF Object to Tidy Data Frame ---
 extract_irf_df <- function(irf_object) {
@@ -540,9 +544,7 @@ ggplot(plot_data, aes(x = horizon, y = irf)) +
     strip.background = element_rect(fill = "#f0f0f0", color = "black")
   )
 
-
-
-#-----SVAR models by Franci----
+#-----SVAR models----
 
 #create A-matrix
 # NA = free parameter, 0 = restricted to zero, 1 = fixed (usually diagonal)
@@ -557,21 +559,26 @@ svar1 <- SVAR(var_model, estmethod = "direct", Amat = amat)#get svar by a matrix
 svar1
 summary(svar1)#look at svar1 responses
 
-irf_responsive1 <- irf(svar1, n.ahead = 24)
+irf_responsive1 <- irf(svar1, n.ahead = 12)
 plot(irf_responsive1)#plotting the ir function for svar1  
 
 #-----new ordering of data-----
 #var_data_new has the order: indpro -> cpi -> fed funds
 var_data_new <- var_data[, c(1,3,2)]
 lag_selection_new <- VARselect(var_data_new, lag.max= 60, type ="const")  #check for info criteria
-print(lag_selection$selection)  #VAR(3) is selected
+print(lag_selection_new$selection)  #VAR(3) is selected
 var_data_new_model <- VAR(var_data_new, p=3, type="const")
 
 summary(var_data_new_model)
 plot(var_data_new_model)
 
-#impulsive response functions for new order
-irf_var_new <- irf(var_data_new_model, n.ahead = 12, boot= TRUE, ortho = "False")
+
+#----check for validity of svar(3)_2-----
+#put stuff from loris in
+
+
+#-----impulsive response functions for new order-----
+irf_var_new <- irf(var_data_new_model, n.ahead = 12, boot= TRUE, ortho = TRUE)
 plot(irf_var_new)
 
 ##svar2
@@ -591,5 +598,5 @@ svar2 <- SVAR(var_data_new_model, estmethod = "direct", Amat=amat2, Bmat=bmat)#g
 svar2
 summary(svar2)
 
-irf_responsive2 <- irf(svar2, n.ahead=12)#irf responsive for new order, 12 monts ahead
+irf_responsive2 <- irf(svar2, n.ahead=12)#irf responsive for new order, 12 months ahead
 plot(irf_responsive2)
