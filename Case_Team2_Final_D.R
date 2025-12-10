@@ -588,20 +588,17 @@ print(serial_test_svar)
 
 #-----impulsive response functions for new order-----
 set.seed(123)
-irf_svar <- irf(svar_model, n.ahead = 24, boot= TRUE, ci= 0.95, runs=500, ortho = TRUE)
+irf_svar <- irf(svar_model, n.ahead = 24, 
+                impulse  = c("trans_indpro", "trans_fedfunds", "trans_cpi"),
+                response = c("trans_indpro", "trans_fedfunds", "trans_cpi"),
+                boot= TRUE, ci= 0.95, runs=500, ortho = TRUE)
 plot(irf_svar)
+
 #ortho= TRUE <--- THIS IS THE KEY DIFFERENCE (Structural Shocks)
-
-#-----new part for svar-----
-
-# 1. Define the Correct Recursive Order
-# Theory (Bernanke et al. 2005): 
-# Slow-Moving (Prod, Prices) -> Policy (Fed Funds)
-# This assumes the Fed reacts instantly to the economy, but the economy reacts with a lag.
-
 # ortho = TRUE enables the Cholesky decomposition based on the column order
 
-
+# Slow-Moving (Prod, Prices) -> Policy (Fed Funds)
+# This assumes the Fed reacts instantly to the economy, but the economy reacts with a lag.
 
 #----plotting of irf for svar----
 # Helper function to extract data for ggplot
