@@ -192,30 +192,31 @@ print(adf_fedfunds_0)
 #Fail to reject H0 hypothesis, time series has an unit root
 
 #----cpi unit root test-----
+cpi_log <- log(cpi)
 plot(cpi, type="l", main= "consumer price index")#plot without proper labeling of axis,
 #because it's just to see if it needs "trend" or "intercept" for the adf
 
-cpi_d2 <- diff(diff(cpi))
+cpi_d2 <- diff(diff(cpi_log))
 plot(cpi_d2, type="l", main="consumer price index diff^2")
 abline(h=0, col= "blue")
 
-cpi_d1 <- diff(cpi)
+cpi_d1 <- diff(cpi_log)
 plot(cpi_d1, type="l", main="consumer price index diff^1")
 abline(h=0, col= "blue")
-abline(h=0.25, col= "red")
-abline(h=0.5, col= "green")
+abline(h=0.0025, col= "red")
+abline(h=0.005, col= "green")
 
-adf_cpi_2 <- adf(diff(cpi, differences=2), deterministics= "intercept")
+adf_cpi_2 <- adf(diff(cpi_log, differences=2), deterministics= "intercept")
 print(adf_cpi_2)
 #intercept, because no clear trend is visible in the plot.
 #reject h0 hypothesis, series is stationary of order I(2)
 
-adf_cpi_1 <- adf(diff(cpi, differences=1), deterministics= "intercept")
+adf_cpi_1 <- adf(diff(cpi_log, differences = 1), deterministics = "intercept")
 print(adf_cpi_1)
 #intercept, because no clear trend is visible in the plot.
 #reject the h0 hypothesis, series is stationary of order I(1)
 
-adf_cpi_0 <- adf(cpi, deterministics= "trend")
+adf_cpi_0 <- adf(cpi_log, deterministics= "trend")
 print(adf_cpi_0)
 #trend, because a clear trend is visible in the plot.
 #not possible to reject the H0 hypothesis, time series has a unit root
